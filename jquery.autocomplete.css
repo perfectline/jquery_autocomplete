@@ -1,7 +1,3 @@
-input.autocomplete-loading {
-  background: url(/images/common/autocomplete.gif) no-repeat center right;
-}
-
 ul.autocomplete {
   position: absolute;
   overflow: hidden;
