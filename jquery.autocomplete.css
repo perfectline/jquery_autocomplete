@@ -1,0 +1,29 @@
+input.autocomplete-loading {
+  background: url(/images/common/autocomplete.gif) no-repeat center right;
+}
+
+ul.autocomplete {
+  position: absolute;
+  overflow: hidden;
+  background-color: #ffffff;
+  border: 1px solid ButtonShadow;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #000000;
+  display: none;
+  z-index: 1000;
+}
+
+ul.autocomplete li {
+  display: block;
+  padding: 0.3em;
+  overflow: hidden;
+  width: 100%;
+  cursor: pointer;
+}
+
+ul.autocomplete li.selected {
+  background-color: Highlight;
+  color: #fff;
+}
