@@ -18,6 +18,14 @@
 
       html: function(item) {
         return item.name;
+      },
+
+      request: function(value) {
+        return {query: value};
+      },
+
+      response: function(item) {
+        return item;
       }
     },
 
