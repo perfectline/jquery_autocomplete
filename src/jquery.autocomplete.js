@@ -1,5 +1,7 @@
 (function() {
 
+  //TODO: inline critical (most?) CSS styles
+
   var DEFAULT_OPTIONS = {
 
     forceSelection:   false,
@@ -19,20 +21,39 @@
       }
     },
 
+    effects: {
+      open: function(element, callback) {
+        element.slideDown(300, callback);
+      },
+
+      //TODO: add effect hover: function(current, previous, callback)?
+
+      select: function(element, callback) {
+        element.slideUp(300, callback);
+      },
+
+      cancel: function(element, callback) {
+        element.slideUp(300, callback);
+      }
+    },
+
     events: {
       onOpen: function() {
       },
 
-      onClose: function() {
+      onHover: function(item) {
       },
 
       onSelect: function(item) {
       },
 
+      onCancel: function() {
+      },
+
       onRequest: function() {
       },
 
-      onResponse: function() {
+      onResponse: function(success) {
       }
     }
   };
@@ -46,6 +67,9 @@
     LEFT:   37,
     RIGHT:  39
   };
+
+  var HOVER_NEXT = -20;
+  var HOVER_PREV = -30;
 
   var AutoComplete = function(element, options) {
     this.init(element, options);
@@ -67,7 +91,7 @@
 
       var self = this;
 
-      self.options = jQuery.extend({}, DEFAULT_OPTIONS, options);
+      self.options = jQuery.extend(true, {}, AUTOCOMPLETE_OPTIONS, options);
 
       self.selectElement = jQuery('<ul class="autocomplete"/>');
       self.selectElement.prependTo(jQuery('body'));
@@ -83,7 +107,7 @@
         self.onKeyPress(event);
       });
 
-      self.inputElement.bind("click.autocomplete", function(event) {
+      self.inputElement.bind('click.autocomplete', function(event) {
         event.stopPropagation();
 
         if (self.selectOpen) {
@@ -91,19 +115,11 @@
         }
       });
 
-      jQuery(document).bind("click.autocomplete", function(event) {
+      jQuery(document).bind('click.autocomplete', function() {
         if (self.selectOpen) {
           self.close(false);
         }
       });
-
-      if (self.options.queryUrl == null) {
-        if (jQuery.isFunction(self.inputElement.metadata) && self.inputElement.metadata().url) {
-          self.options.queryUrl = self.inputElement.metadata().url;
-        } else {
-          self.options.queryUrl = self.inputElement.attr('rel');
-        }
-      }
     },
 
     open: function() {
@@ -126,72 +142,82 @@
         });
 
         item.bind('mouseenter.autocomplete', function() {
-          self.selectIndex = self.selectElement.find('li').index(item) + 1;
-          self.selectElement.find('li.selected').removeClass('selected');
-          self.selectElement.find('li:nth-child(' + self.selectIndex + ')').addClass('selected');
+          self.hover(self.selectElement.find('li').index(item));
         });
 
         self.selectElement.append(item);
       });
 
-      self.selectElement.find('li:first').addClass('selected');
-      self.selectIndex = 1;
+      self.hover(0);
       self.selectOpen = true;
-      self.selectElement.slideDown(300);
 
-      self.options.events.onOpen.call(self.options);
+      self.options.effects.open.call(self.options, function() {
+        self.options.events.onOpen.call(self.options);
+      });
     },
 
-    close: function(selected) {
+    hover: function(index) {
       var self = this;
 
-      self.selectData = [];
-      self.selectIndex = -1;
-      self.selectOpen = false;
-      self.selectElement.slideUp(300);
+      if (index == HOVER_NEXT) {
+        self.selectIndex++;
 
-      if (self.options.forceSelection && !selected) {
-        self.inputElement.val("");
-      }
+        if (self.selectIndex >= self.selectData.length) {
+          self.selectIndex = 0;
+        }
 
-      self.options.events.onClose.call(self.options);
-    },
+      } else if (index == HOVER_PREV) {
+        self.selectIndex--;
 
-    prev: function() {
-      var self = this;
+        if (self.selectIndex < 0) {
+          self.selectIndex = self.selectData.length - 1;
+        }
 
-      self.selectIndex--;
+      } else if (index >= 0 && index < self.selectData.length) {
+        self.selectIndex = index;
 
-      if (self.selectIndex < 1) {
-        self.selectIndex = self.selectData.length;
-      }
+      } else {
+        return;
 
-      self.selectElement.find('li.selected').removeClass('selected');
-      self.selectElement.find('li:nth-child(' + self.selectIndex + ')').addClass('selected');
-    },
-
-    next: function() {
-      var self = this;
-
-      self.selectIndex++;
-
-      if (self.selectIndex > self.selectData.length) {
-        self.selectIndex = 1;
       }
 
       self.selectElement.find('li.selected').removeClass('selected');
-      self.selectElement.find('li:nth-child(' + self.selectIndex + ')').addClass('selected');
+
+      var items = self.selectElement.find('li');
+
+      if (items[self.selectIndex]) {
+        items[self.selectIndex].addClass('selected');
+      }
     },
 
     select: function() {
       var self = this;
-      var index = Math.max(0, self.selectIndex - 1);
+      var item = self.selectData[self.selectIndex];
 
-      var text = self.options.formatters.text.apply(self.options, self.selectData[index]);
+      self.inputElement.val(
+              self.options.formatters.text.apply(self.options, item));
 
-      self.inputElement.val(text);
-      self.options.onSelect.call(self.options);
-      self.close(true);
+      self.effects.close.call(self.options,
+              self.options.onSelect.call(self.options, item));
+
+      self.selectData = [];
+      self.selectIndex = -1;
+      self.selectOpen = false;
+    },
+
+    cancel: function() {
+      var self = this;
+
+      if (self.options.forceSelection) {
+        self.inputElement.val("");
+      }
+
+      self.effects.close.call(self.options,
+              self.options.onCancel.call(self.options));
+
+      self.selectData = [];
+      self.selectIndex = -1;
+      self.selectOpen = false;
     },
 
     onKeyDown: function(event) {
@@ -204,11 +230,11 @@
 
       if (code == KEYS.UP || code == KEYS.LEFT) {
         event.preventDefault();
-        self.prev();
+        self.hover(HOVER_PREV);
 
       } else if (code == KEYS.DOWN || code == KEYS.RIGHT || code == KEYS.TAB) {
         event.preventDefault();
-        self.next();
+        self.hover(HOVER_NEXT);
 
       } else if (code == KEYS.ENTER) {
         event.preventDefault();
