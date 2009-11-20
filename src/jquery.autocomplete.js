@@ -1,6 +1,6 @@
 (function() {
 
-  var OPTIONS = {
+  var DEFAULT_OPTIONS = {
 
     forceSelection:   false,
 
@@ -67,7 +67,7 @@
 
       var self = this;
 
-      self.options = jQuery.extend({}, OPTIONS, options);
+      self.options = jQuery.extend({}, DEFAULT_OPTIONS, options);
 
       self.selectElement = jQuery('<ul class="autocomplete"/>');
       self.selectElement.prependTo(jQuery('body'));
