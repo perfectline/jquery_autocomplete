@@ -1,6 +1,41 @@
 (function() {
 
-  //TODO implement forceSelection and fire onClear
+  var OPTIONS = {
+
+    forceSelection:   false,
+
+    queryLengthMin:   3,
+    queryDelay:       1000,
+    queryUrl:         null,
+    queryParams:      {},
+
+    formatters: {
+      text: function(item) {
+        return item.name;
+      },
+
+      html: function(item) {
+        return item.name;
+      }
+    },
+
+    events: {
+      onOpen: function() {
+      },
+
+      onClose: function() {
+      },
+
+      onSelect: function(item) {
+      },
+
+      onRequest: function() {
+      },
+
+      onResponse: function() {
+      }
+    }
+  };
 
   var KEYS = {
     ENTER:  13,
@@ -18,7 +53,7 @@
 
   AutoComplete.prototype = {
 
-    options: null,
+    options:        null,
 
     inputElement:   null,
     inputTimeout:   null,
@@ -32,29 +67,14 @@
 
       var self = this;
 
-      this.options = jQuery.extend({
-        forceSelection: false,
-        queryLengthMin: 3,
-        queryDelay:     1000,
-        queryUrl:       null,
-        queryParams: {
-        },
-
-        onSelect: function() {
-        },
-
-        onClear: function() {
-        },
-
-        onResponse: null,
-        onSetValue: null
-      }, options);
+      self.options = jQuery.extend({}, OPTIONS, options);
 
       self.selectElement = jQuery('<ul class="autocomplete"/>');
       self.selectElement.prependTo(jQuery('body'));
 
       self.inputElement = jQuery(element);
       self.inputElement.attr('autocomplete', 'off');
+
       self.inputElement.bind('keydown.autocomplete', function(event) {
         self.onKeyDown(event);
       });
@@ -64,14 +84,17 @@
       });
 
       self.inputElement.bind("click.autocomplete", function(event) {
-        event.stopPropagation(); // so it would not get intercepted by body click listener?
-        if (self.selectOpen)
+        event.stopPropagation();
+
+        if (self.selectOpen) {
           self.close(false);
+        }
       });
 
       jQuery(document).bind("click.autocomplete", function(event) {
-        if (self.selectOpen)
+        if (self.selectOpen) {
           self.close(false);
+        }
       });
 
       if (self.options.queryUrl == null) {
@@ -83,22 +106,6 @@
       }
     },
 
-    formatResponse: function(row) {
-      if (jQuery.isFunction(this.options.onResponse)) {
-        return this.options.onResponse.call(this.options, row);
-      }
-
-      return row;
-    },
-
-    formatValue: function(row) {
-      if (jQuery.isFunction(this.options.onSetValue)) {
-        return this.options.onSetValue.call(this.options, row);
-      }
-
-      return row;
-    },
-
     open: function() {
 
       var self = this;
@@ -106,12 +113,14 @@
       self.selectElement.css('top', self.inputElement.offset().top + self.inputElement.outerHeight());
       self.selectElement.css('left', self.inputElement.offset().left);
       self.selectElement.css('width', self.inputElement.innerWidth());
+
       self.selectElement.html('');
 
       jQuery(self.selectData).each(function() {
         var item = jQuery('<li/>');
 
-        item.html(self.formatResponse(this));
+        item.html(self.options.formatters.html.call(self.options, this));
+
         item.bind('click.autocomplete', function() {
           self.select();
         });
@@ -129,6 +138,8 @@
       self.selectIndex = 1;
       self.selectOpen = true;
       self.selectElement.slideDown(300);
+
+      self.options.events.onOpen.call(self.options);
     },
 
     close: function(selected) {
@@ -139,8 +150,11 @@
       self.selectOpen = false;
       self.selectElement.slideUp(300);
 
-      if (!selected && self.options.forceSelection)
+      if (self.options.forceSelection && !selected) {
         self.inputElement.val("");
+      }
+
+      self.options.events.onClose.call(self.options);
     },
 
     prev: function() {
@@ -173,8 +187,10 @@
       var self = this;
       var index = Math.max(0, self.selectIndex - 1);
 
-      self.inputElement.val(self.formatValue(self.selectData[index]));
-      self.options.onSelect.call(self.options, self.selectData[index]);
+      var text = self.options.formatters.text.apply(self.options, self.selectData[index]);
+
+      self.inputElement.val(text);
+      self.options.onSelect.call(self.options);
       self.close(true);
     },
 
@@ -221,6 +237,8 @@
 
         if (self.inputElement.val().length >= self.options.queryLengthMin) {
 
+          self.options.events.onRequest.call(self.options);
+
           var params = jQuery.extend({}, self.options.queryParams, {
             query: self.inputElement.val()
           });
@@ -234,12 +252,14 @@
             success: function(data) {
               if (jQuery.isArray(data) && data.length > 0) {
                 self.selectData = data;
+                self.options.events.onResponse.call(self.options);
                 self.open();
               }
             },
 
             error: function() {
               self.selectData = [];
+              self.options.events.onResponse.call(self.options);
             }
           });
         }
