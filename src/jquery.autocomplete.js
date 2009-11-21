@@ -205,12 +205,10 @@
       self.inputElement.val(
               self.options.formatters.text.apply(self.options, item));
 
-      self.effects.cancel.call(self.options,
+      self.effects.select.call(self.options,
               self.options.onSelect.call(self.options, item));
 
-      self.selectData = [];
-      self.selectIndex = -1;
-      self.selectOpen = false;
+      self.reset();
     },
 
     cancel: function() {
@@ -222,6 +220,12 @@
 
       self.effects.cancel.call(self.options,
               self.options.onCancel.call(self.options));
+
+      self.reset();
+    },
+
+    reset: function() {
+      var self = this;
 
       self.selectData = [];
       self.selectIndex = -1;
