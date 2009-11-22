@@ -24,24 +24,28 @@
         return {query: value};
       },
 
-      response: function(item) {
+      response: function(content) {
         return item;
       }
     },
 
     effects: {
-      open: function(element, callback) {
-        element.slideDown(300, callback);
+      open: function(element) {
+        element.slideDown(300);
       },
 
-      //TODO: add effect hover: function(current, previous, callback)?
-
-      select: function(element, callback) {
-        element.slideUp(300, callback);
+      hover: function(element) {
       },
 
-      cancel: function(element, callback) {
-        element.slideUp(300, callback);
+      fade: function(element) {
+      },
+
+      select: function(element) {
+        element.slideUp(300);
+      },
+
+      cancel: function(element) {
+        element.slideUp(300);
       }
     },
 
@@ -57,6 +61,10 @@
 
       onCancel: function() {
       },
+
+      onReset: function() {
+
+      } ,
 
       onRequest: function() {
       },
@@ -157,11 +165,11 @@
       });
 
       self.hover(0);
+
       self.selectOpen = true;
 
-      self.options.effects.open.call(self.options, function() {
-        self.options.events.onOpen.call(self.options);
-      });
+      self.options.events.onOpen.call(self.options);
+      self.options.effects.open.call(self.options, self.selectElement);
     },
 
     hover: function(index) {
@@ -189,12 +197,21 @@
 
       }
 
-      self.selectElement.find('li.selected').removeClass('selected');
-
       var items = self.selectElement.find('li');
 
-      if (items[self.selectIndex]) {
-        items[self.selectIndex].addClass('selected');
+      var previous = self.selectElement.find('li.selected');
+      var current = items[self.selectIndex];
+
+      if (previous != null) {
+        jQuery(previous).removeClass('selected');
+
+        self.options.effects.fade.call(self.options, previous);
+      }
+
+      if (current != null) {
+        jQuery(current).addClass('selected');
+
+        self.options.effects.hover.call(self.options, current);
       }
     },
 
@@ -205,8 +222,8 @@
       self.inputElement.val(
               self.options.formatters.text.apply(self.options, item));
 
-      self.effects.select.call(self.options,
-              self.options.onSelect.call(self.options, item));
+      self.options.events.onSelect.call(self.options, item);
+      self.options.effects.select.call(self.options, self.selectElement);
 
       self.reset();
     },
@@ -218,8 +235,8 @@
         self.inputElement.val("");
       }
 
-      self.effects.cancel.call(self.options,
-              self.options.onCancel.call(self.options));
+      self.options.events.onCancel.call(self.options);
+      self.options.effects.cancel.call(self.options);
 
       self.reset();
     },
