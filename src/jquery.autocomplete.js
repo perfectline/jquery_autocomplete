@@ -1,7 +1,5 @@
 (function() {
 
-  //TODO: inline critical (most?) CSS styles
-
   var DEFAULT_OPTIONS = {
 
     delay:            1000,
@@ -87,6 +85,9 @@
       self.options = jQuery.extend(true, {}, DEFAULT_OPTIONS, options);
 
       self.selectElement = jQuery('<ul class="autocomplete"/>');
+      self.selectElement.css('position', 'absolute');
+      self.selectElement.css('overflow', 'hidden');
+      self.selectElement.css('display', 'none');
       self.selectElement.prependTo(jQuery('body'));
 
       self.inputElement = jQuery(element);
@@ -127,6 +128,9 @@
 
       jQuery(self.selectData).each(function() {
         var item = jQuery('<li/>');
+
+        item.css('display', 'block');
+        item.css('overflow', 'hidden');
 
         item.html(self.options.formatters.html.call(self.options, this));
 
