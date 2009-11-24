@@ -4,12 +4,16 @@
 
   var DEFAULT_OPTIONS = {
 
+    delay:            1000,
     forceSelection:   false,
+    minimumLength:    3,
 
-    queryLengthMin:   3,
-    queryDelay:       1000,
-    queryUrl:         null,
-    queryParams:      {},
+    ajaxOptions:      {
+      url:        null,
+      cache:      false,
+      dataType:   'json',
+      data:       {}
+    },
 
     formatters: {
       text: function(item) {
@@ -29,42 +33,15 @@
       }
     },
 
-    effects: {
-      open: function(element) {
-        element.slideDown(300);
-      },
-
-      hover: function(element) {
-      },
-
-      fade: function(element) {
-      },
-
-      select: function(element) {
-        element.slideUp(300);
-      },
-
-      cancel: function(element) {
-        element.slideUp(300);
-      }
-    },
-
     events: {
       onOpen: function() {
       },
 
-      onHover: function(item) {
+      onClose: function() {
       },
 
       onSelect: function(item) {
       },
-
-      onCancel: function() {
-      },
-
-      onReset: function() {
-
-      } ,
 
       onRequest: function() {
       },
@@ -107,7 +84,7 @@
 
       var self = this;
 
-      self.options = jQuery.extend(true, {}, AUTOCOMPLETE_OPTIONS, options);
+      self.options = jQuery.extend(true, {}, DEFAULT_OPTIONS, options);
 
       self.selectElement = jQuery('<ul class="autocomplete"/>');
       self.selectElement.prependTo(jQuery('body'));
@@ -167,9 +144,25 @@
       self.hover(0);
 
       self.selectOpen = true;
+      self.selectElement.slideDown(300);
 
       self.options.events.onOpen.call(self.options);
-      self.options.effects.open.call(self.options, self.selectElement);
+    },
+
+    close: function() {
+      var self = this;
+
+      if (self.options.forceSelection) {
+        self.inputElement.val("");
+      }
+
+      self.options.events.onClose.call(self.options);
+
+      self.selectData = [];
+      self.selectIndex = -1;
+      self.selectOpen = false;
+
+      self.selectElement.slideUp(300);
     },
 
     hover: function(index) {
@@ -204,14 +197,10 @@
 
       if (previous != null) {
         jQuery(previous).removeClass('selected');
-
-        self.options.effects.fade.call(self.options, previous);
       }
 
       if (current != null) {
         jQuery(current).addClass('selected');
-
-        self.options.effects.hover.call(self.options, current);
       }
     },
 
@@ -223,30 +212,12 @@
               self.options.formatters.text.apply(self.options, item));
 
       self.options.events.onSelect.call(self.options, item);
-      self.options.effects.select.call(self.options, self.selectElement);
-
-      self.reset();
-    },
-
-    cancel: function() {
-      var self = this;
-
-      if (self.options.forceSelection) {
-        self.inputElement.val("");
-      }
-
-      self.options.events.onCancel.call(self.options);
-      self.options.effects.cancel.call(self.options);
-
-      self.reset();
-    },
-
-    reset: function() {
-      var self = this;
 
       self.selectData = [];
       self.selectIndex = -1;
       self.selectOpen = false;
+
+      self.selectElement.slideUp(300);
     },
 
     onKeyDown: function(event) {
@@ -290,37 +261,35 @@
       self.inputTimeout = window.setInterval(function() {
         window.clearInterval(self.inputTimeout);
 
-        if (self.inputElement.val().length >= self.options.queryLengthMin) {
+        if (self.inputElement.val().length >= self.options.minimumLength) {
+
+          var params = jQuery.extend({}, self.options.ajaxOptions);
+
+          jQuery.extend(params.data,
+                  self.options.formatters.request.call(self.options, self.inputElement.val()));
+
+          params.success = function(data) {
+            var items = self.options.formatters.response.call(self.options, data);
+
+            if (jQuery.isArray(items) && items.length > 0) {
+              self.selectData = items;
+              self.options.events.onResponse.call(self.options, true);
+              self.open();
+            }
+
+          };
+
+          params.error = function(data) {
+            self.selectData = [];
+            self.options.events.onResponse.call(self.options, false);
+          };
 
           self.options.events.onRequest.call(self.options);
 
-          var params = jQuery.extend({}, self.options.queryParams,
-                  self.options.formatters.request.call(self.options, self.inputElement.val()));
-
-          jQuery.ajax({
-            url:        self.options.queryUrl,
-            cache:      false,
-            data:       params,
-            dataType:   'json',
-
-            success: function(data) {
-              var items = self.options.formatters.response.call(self.options, data);
-
-              if (jQuery.isArray(items) && items.length > 0) {
-                self.selectData = items;
-                self.options.events.onResponse.call(self.options, true);
-                self.open();
-              }
-            },
-
-            error: function() {
-              self.selectData = [];
-              self.options.events.onResponse.call(self.options, false);
-            }
-          });
+          jQuery.ajax(params);
         }
 
-      }, self.options.queryDelay);
+      }, self.options.delay);
     }
   };
 
