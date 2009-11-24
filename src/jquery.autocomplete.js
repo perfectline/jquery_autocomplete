@@ -294,9 +294,8 @@
 
           self.options.events.onRequest.call(self.options);
 
-          var params = jQuery.extend({}, self.options.queryParams, {
-            query: self.inputElement.val()
-          });
+          var params = jQuery.extend({}, self.options.queryParams,
+                  self.options.formatters.request.call(self.options, self.inputElement.val()));
 
           jQuery.ajax({
             url:        self.options.queryUrl,
@@ -305,16 +304,18 @@
             dataType:   'json',
 
             success: function(data) {
-              if (jQuery.isArray(data) && data.length > 0) {
-                self.selectData = data;
-                self.options.events.onResponse.call(self.options);
+              var items = self.options.formatters.response.call(self.options, data);
+
+              if (jQuery.isArray(items) && items.length > 0) {
+                self.selectData = items;
+                self.options.events.onResponse.call(self.options, true);
                 self.open();
               }
             },
 
             error: function() {
               self.selectData = [];
-              self.options.events.onResponse.call(self.options);
+              self.options.events.onResponse.call(self.options, false);
             }
           });
         }
