@@ -105,13 +105,13 @@
         event.stopPropagation();
 
         if (self.selectOpen) {
-          self.cancel();
+          self.close();
         }
       });
 
       jQuery(document).bind('click.autocomplete', function() {
         if (self.selectOpen) {
-          self.cancel();
+          self.close();
         }
       });
     },
@@ -246,7 +246,7 @@
 
       } else if (code == KEYS.ESC) {
         event.preventDefault();
-        self.cancel();
+        self.close();
       }
     },
 
