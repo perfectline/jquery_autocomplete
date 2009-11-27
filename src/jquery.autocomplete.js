@@ -27,7 +27,7 @@
       },
 
       response: function(content) {
-        return item;
+        return content;
       }
     },
 
