@@ -213,7 +213,7 @@
       var item = self.selectData[self.selectIndex];
 
       self.inputElement.val(
-              self.options.formatters.text.apply(self.options, item));
+              self.options.formatters.text.call(self.options, item));
 
       self.options.events.onSelect.call(self.options, item);
 
