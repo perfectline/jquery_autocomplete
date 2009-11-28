@@ -4,6 +4,7 @@
 
     delay:            1000,
     forceSelection:   false,
+    clearSelection:   false,
     minimumLength:    3,
 
     ajaxOptions:      {
@@ -222,6 +223,10 @@
       self.selectOpen = false;
 
       self.selectElement.slideUp(300);
+
+      if (self.options.clearSelection) {
+        self.selectElement.val("");
+      }
     },
 
     onKeyDown: function(event) {
@@ -266,6 +271,10 @@
         window.clearInterval(self.inputTimeout);
 
         if (self.inputElement.val().length >= self.options.minimumLength) {
+
+          if (self.selectOpen) {
+            self.close();
+          }
 
           var params = jQuery.extend({}, self.options.ajaxOptions);
 
