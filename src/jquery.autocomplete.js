@@ -225,7 +225,7 @@
       self.selectElement.slideUp(300);
 
       if (self.options.clearSelection) {
-        self.inputELement.val("");
+        self.inputElement.val("");
       }
     },
 
