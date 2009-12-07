@@ -267,8 +267,6 @@
 
         if (self.inputElement.val().length >= self.options.minimumLength) {
 
- 
-
           var params = jQuery.extend({}, self.options.ajaxOptions);
 
           jQuery.extend(params.data,
