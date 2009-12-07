@@ -4,7 +4,6 @@
 
     delay:            1000,
     forceSelection:   false,
-    clearSelection:   false,
     minimumLength:    3,
 
     ajaxOptions:      {
@@ -223,10 +222,6 @@
       self.selectOpen = false;
 
       self.selectElement.slideUp(300);
-
-      if (self.options.clearSelection) {
-        self.inputElement.val("");
-      }
     },
 
     onKeyDown: function(event) {
