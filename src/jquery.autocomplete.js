@@ -148,9 +148,10 @@
       self.hover(0);
 
       self.selectOpen = true;
-      self.selectElement.slideDown(300);
 
-      self.options.events.onOpen.call(self.options);
+      self.selectElement.slideDown(300, function() {
+        self.options.events.onOpen.call(self.options);
+      });
     },
 
     close: function() {
@@ -160,13 +161,13 @@
         self.inputElement.val("");
       }
 
-      self.options.events.onClose.call(self.options);
-
       self.selectData = [];
       self.selectIndex = -1;
       self.selectOpen = false;
 
-      self.selectElement.slideUp(300);
+      self.selectElement.slideUp(300, function() {
+        self.options.events.onClose.call(self.options);
+      });
     },
 
     hover: function(index) {
@@ -215,13 +216,13 @@
       self.inputElement.val(
               self.options.formatters.text.call(self.options, item));
 
-      self.options.events.onSelect.call(self.options, item);
-
       self.selectData = [];
       self.selectIndex = -1;
       self.selectOpen = false;
 
-      self.selectElement.slideUp(300);
+      self.selectElement.slideUp(300, function() {
+        self.options.events.onSelect.call(self.options, item);
+      });
     },
 
     onKeyDown: function(event) {
