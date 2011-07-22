@@ -2,9 +2,10 @@
 
   var DEFAULT_OPTIONS = {
 
-    delay:            1000,
-    forceSelection:   false,
-    minimumLength:    3,
+    delay           : 1000,
+    forceSelection  : false,
+    minimumLength   : 3,
+    loader          : null,
 
     ajaxOptions:      {
       url:        null,
@@ -78,6 +79,8 @@
     selectData:     [],
     selectOpen:     false,
 
+    loaderElement:  null,
+
     init: function(element, options) {
 
       var self = this;
@@ -114,6 +117,14 @@
           self.close();
         }
       });
+
+      if (self.options.loader) {
+        self.loaderElement = jQuery('<img/>');
+        self.loaderElement.attr('src', self.options.loader);
+        self.loaderElement.css('position', 'absolute');
+        self.loaderElement.css('display', 'none');
+        self.loaderElement.prependTo('body');
+      }
     },
 
     open: function() {
@@ -214,7 +225,7 @@
       var item = self.selectData[self.selectIndex];
 
       self.inputElement.val(
-              self.options.formatters.text.call(self.options, item));
+        self.options.formatters.text.call(self.options, item));
 
       self.selectData = [];
       self.selectIndex = -1;
@@ -271,7 +282,7 @@
           var params = jQuery.extend({}, self.options.ajaxOptions);
 
           jQuery.extend(params.data,
-                  self.options.formatters.request.call(self.options, self.inputElement.val()));
+            self.options.formatters.request.call(self.options, self.inputElement.val()));
 
           params.success = function(data) {
             var items = self.options.formatters.response.call(self.options, data);
@@ -279,6 +290,11 @@
             if (jQuery.isArray(items) && items.length > 0) {
               self.selectData = items;
               self.options.events.onResponse.call(self.options, true);
+
+              if (self.loaderElement != null) {
+                self.loaderElement.css('display', 'none');
+              }
+
               self.open();
             }
 
@@ -290,6 +306,19 @@
           };
 
           self.options.events.onRequest.call(self.options);
+
+          if (self.loaderElement != null) {
+
+            var loaderHeight = self.loaderElement.outerHeight();
+            var loaderWidth = self.loaderElement.outerWidth();
+
+            var inputHeight = self.inputElement.outerHeight();
+            var inputWidth = self.inputElement.outerWidth();
+
+            self.loaderElement.css('top', self.inputElement.offset().top + (inputHeight / 2 - loaderHeight / 2));
+            self.loaderElement.css('left', self.inputElement.offset().left + (inputWidth - loaderWidth));
+            self.loaderElement.css('display', 'block');
+          }
 
           jQuery.ajax(params);
         }
