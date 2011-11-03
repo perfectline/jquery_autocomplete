@@ -80,6 +80,7 @@
     selectOpen:     false,
 
     loaderElement:  null,
+    currentValue: null,
 
     init: function(element, options) {
 
@@ -89,12 +90,16 @@
 
       self.selectElement = jQuery('<ul class="autocomplete"/>');
       self.selectElement.css('position', 'absolute');
-      self.selectElement.css('overflow', 'hidden');
+      self.selectElement.css('overflow-x', 'hidden');
+      self.selectElement.css('overflow-y', 'auto');
       self.selectElement.css('display', 'none');
       self.selectElement.prependTo(jQuery('body'));
 
       self.inputElement = jQuery(element);
+      self.inputElement.addClass("nosubmit");
       self.inputElement.attr('autocomplete', 'off');
+
+      self.currentValue = self.inputElement.val();
 
       self.inputElement.bind('keydown.autocomplete', function(event) {
         self.onKeyDown(event);
@@ -134,7 +139,7 @@
       self.selectElement.css('top', self.inputElement.offset().top + self.inputElement.outerHeight());
       self.selectElement.css('left', self.inputElement.offset().left);
       self.selectElement.css('width', self.inputElement.innerWidth());
-
+      self.selectElement.css('max-height', $(window).height() - (self.inputElement.offset().top + self.inputElement.outerHeight()) - 100 + "px");
       self.selectElement.html('');
 
       jQuery(self.selectData).each(function() {
@@ -160,7 +165,7 @@
 
       self.selectOpen = true;
 
-      self.selectElement.slideDown(300, function() {
+      self.selectElement.slideDown(150, function() {
         self.options.events.onOpen.call(self.options);
       });
     },
@@ -169,15 +174,16 @@
       var self = this;
 
       if (self.options.forceSelection) {
-        self.inputElement.val("");
+        self.inputElement.val(self.currentValue);
       }
 
       self.selectData = [];
       self.selectIndex = -1;
       self.selectOpen = false;
 
-      self.selectElement.slideUp(300, function() {
+      self.selectElement.slideUp(100, function() {
         self.options.events.onClose.call(self.options);
+        self.selectElement.html("");
       });
     },
 
@@ -224,14 +230,14 @@
       var self = this;
       var item = self.selectData[self.selectIndex];
 
-      self.inputElement.val(
-        self.options.formatters.text.call(self.options, item));
+      self.inputElement.val(self.options.formatters.text.call(self.options, item));
+      self.currentValue = self.inputElement.val();
 
       self.selectData = [];
       self.selectIndex = -1;
       self.selectOpen = false;
 
-      self.selectElement.slideUp(300, function() {
+      self.selectElement.slideUp(100, function() {
         self.options.events.onSelect.call(self.options, item);
       });
     },
@@ -309,14 +315,14 @@
 
           if (self.loaderElement != null) {
 
-            var loaderHeight = self.loaderElement.outerHeight();
-            var loaderWidth = self.loaderElement.outerWidth();
+            var loaderHeight  = self.loaderElement.outerHeight();
+            var loaderWidth   = self.loaderElement.outerWidth();
 
             var inputHeight = self.inputElement.outerHeight();
-            var inputWidth = self.inputElement.outerWidth();
+            var inputWidth  = self.inputElement.outerWidth();
 
             self.loaderElement.css('top', self.inputElement.offset().top + (inputHeight / 2 - loaderHeight / 2));
-            self.loaderElement.css('left', self.inputElement.offset().left + (inputWidth - loaderWidth));
+            self.loaderElement.css('left', self.inputElement.offset().left + (inputWidth - loaderWidth - 5));
             self.loaderElement.css('display', 'block');
           }
 
