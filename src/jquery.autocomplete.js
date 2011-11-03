@@ -42,6 +42,12 @@
       onSelect: function(item) {
       },
 
+      onChange: function() {
+      },
+
+      onClear: function() {
+      },
+
       onRequest: function() {
       },
 
@@ -103,6 +109,10 @@
 
       self.inputElement.bind('keydown.autocomplete', function(event) {
         self.onKeyDown(event);
+      });
+
+      self.inputElement.bind('keyup.autocomplete', function(event) {
+        self.onKeyUp(event);
       });
 
       self.inputElement.bind('keypress.autocomplete', function(event) {
@@ -268,6 +278,25 @@
       }
     },
 
+    onKeyUp: function(event) {
+      var self = this;
+
+      if (self.currentValue != null && self.currentValue.length > 0 && self.currentValue != self.inputElement.val()) {
+
+        self.currentValue = null;
+
+        if (self.options.forceSelection) {
+
+          self.inputElement.val('');
+          self.options.events.onClear.call(self.options);
+
+        } else {
+          self.options.events.onChange.call(self.options);
+
+        }
+      }
+    },
+
     onKeyPress: function(event) {
       var self    = this;
       var ignore  = false;
@@ -275,7 +304,7 @@
       if (event.keyCode == KEYS.ENTER)
         return false;
 
-      $.each(KEYS, function(key, value) {
+      $.each(KEYS, function(key, value) {
         if (value == event.keyCode)
           ignore = true;
       });
