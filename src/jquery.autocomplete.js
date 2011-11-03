@@ -269,12 +269,19 @@
     },
 
     onKeyPress: function(event) {
-      var self = this;
-      var code = event.charCode;
+      var self    = this;
+      var ignore  = false;
 
-      if (code == 0) {
-        return;
-      }
+      if (event.keyCode == KEYS.ENTER)
+        return false;
+
+      $.each(KEYS, function(key, value) {
+        if (value == event.keyCode)
+          ignore = true;
+      });
+
+      if (this.selectOpen && ignore)
+        return false;
 
       if (self.inputTimeout != null) {
         window.clearInterval(self.inputTimeout);
@@ -293,14 +300,13 @@
           params.success = function(data) {
             var items = self.options.formatters.response.call(self.options, data);
 
+            if (self.loaderElement != null) {
+              self.loaderElement.css('display', 'none');
+            }
+
             if (jQuery.isArray(items) && items.length > 0) {
               self.selectData = items;
               self.options.events.onResponse.call(self.options, true);
-
-              if (self.loaderElement != null) {
-                self.loaderElement.css('display', 'none');
-              }
-
               self.open();
             }
 
